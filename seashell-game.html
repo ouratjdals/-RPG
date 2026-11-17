@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#dff5f2">
+<title>조개마을 — 파도와 장사</title>
+<style>
+  :root {
+    color-scheme: light;
+    --ink: #173c4c;
+    --muted: #6a8990;
+    --teal: #168f8d;
+    --teal-dark: #116f74;
+    --foam: #e8f6ef;
+    --paper: #fffdf7;
+    --line: #dcebe3;
+    --coral: #ef886e;
+    --gold: #eab95d;
+    --shadow: 0 18px 48px rgba(27, 83, 91, .12);
+  }
+  * { box-sizing: border-box; }
+  html, body { min-height: 100%; }
+  body {
+    margin: 0;
+    color: var(--ink);
+    background:
+      radial-gradient(ellipse at 16% 3%, rgba(255,255,255,.76), transparent 31rem),
+      linear-gradient(145deg, #e1f5ef 0%, #f8f3df 72%, #fae8d1 100%);
+    font-family: "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif;
+    letter-spacing: -.02em;
+  }
+  button { font: inherit; }
+  .app { max-width: 1510px; margin: 0 auto; padding: 22px 26px 28px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; gap:18px; margin-bottom:17px; }
+  .brand { display:flex; align-items:center; gap:13px; min-width:235px; }
+  .brand-mark { width:47px; height:47px; display:grid; place-items:center; border-radius:17px; color:#fff; background:linear-gradient(145deg,#46bcb0,#167b84); box-shadow:0 9px 22px rgba(22,143,141,.24); }
+  .brand-mark svg { width:29px;height:29px; }
+  .brand-copy { min-width:0; }
+  .brand-kicker { color:#528288; font-size:10px; font-weight:850; letter-spacing:.16em; }
+  .brand-title { margin-top:2px; font-size:20px; font-weight:950; letter-spacing:-.07em; }
+  .top-stats { display:flex; align-items:stretch; gap:9px; }
+  .stat { min-width:105px; padding:9px 13px 8px; border:1px solid rgba(183,213,203,.8); border-radius:16px; background:rgba(255,255,255,.72); box-shadow:0 5px 16px rgba(27,83,91,.045); }
+  .stat-label { font-size:10px; font-weight:850; letter-spacing:.08em; color:var(--muted); }
+  .stat-value { margin-top:2px; font-size:19px; line-height:1.1; font-weight:950; letter-spacing:-.06em; white-space:nowrap; }
+  .round-pill { min-width:112px; border-color:#abd9d1; background:#effbf4; }
+  .round-pill .stat-value { color:var(--teal-dark); }
+  .head-actions { display:flex; align-items:center; gap:8px; }
+  .quiet-button { border:1px solid #cfe4dc; border-radius:12px; padding:10px 13px; color:#4d7379; background:rgba(255,255,255,.65); font-size:12px; font-weight:850; cursor:pointer; transition:.18s ease; }
+  .quiet-button:hover { border-color:#83bcb3; color:var(--teal-dark); transform:translateY(-1px); }
+  .layout { display:grid; grid-template-columns:minmax(0,1fr) 345px; align-items:stretch; gap:17px; }
+  .scene-card, .side-card { border:1px solid rgba(191,218,208,.9); border-radius:23px; background:rgba(255,253,247,.92); box-shadow:var(--shadow); overflow:hidden; }
+  .scene-card { min-width:0; }
+  .scene-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:16px 20px 13px; }
+  .scene-title { font-size:14px; font-weight:950; letter-spacing:-.04em; }
+  .scene-subtitle { margin-top:3px; color:var(--muted); font-size:11px; font-weight:650; }
+  .weather-chip { display:flex; align-items:center; gap:7px; padding:7px 10px; border-radius:999px; color:#5b827e; background:#eff8eb; font-size:10px; font-weight:850; white-space:nowrap; }
+  .sun-dot { width:9px; height:9px; border-radius:50%; background:#f2bf62; box-shadow:0 0 0 4px rgba(242,191,98,.17); }
+  .canvas-wrap { position:relative; margin:0 12px; height:min(64vh, 585px); min-height:390px; overflow:hidden; border-radius:17px; background:#80cfc9; box-shadow:inset 0 0 0 1px rgba(255,255,255,.48); }
+  #world { display:block; width:100%; height:100%; }
+  .scene-hud { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:space-between; padding:13px; pointer-events:none; }
+  .scene-topline { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .mini-chip { padding:8px 11px; border:1px solid rgba(255,255,255,.8); border-radius:11px; color:#29545b; background:rgba(255,253,244,.84); box-shadow:0 4px 14px rgba(25,76,84,.1); font-size:11px; font-weight:900; backdrop-filter:blur(8px); }
+  .mini-chip strong { color:var(--teal-dark); }
+  .scene-bottomline { display:flex; align-items:flex-end; justify-content:space-between; gap:10px; }
+  .hint-chip { max-width:75%; padding:9px 12px; border-radius:12px; color:#fff; background:rgba(23,60,76,.76); box-shadow:0 5px 17px rgba(13,46,56,.18); font-size:11px; font-weight:750; line-height:1.5; backdrop-filter:blur(8px); }
+  .timer-chip { padding:8px 11px; border-radius:11px; color:#28545a; background:rgba(255,253,244,.9); font-size:11px; font-weight:900; white-space:nowrap; }
+  .scene-footer { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:11px 18px 15px; color:#6d898b; font-size:10px; font-weight:750; }
+  .keys { display:flex; align-items:center; gap:4px; }
+  kbd { min-width:22px; padding:3px 5px; border:1px solid #d1e2da; border-bottom-width:2px; border-radius:6px; color:#42646b; background:#fff; text-align:center; font:800 10px/1.1 inherit; }
+  .sidebar { display:flex; flex-direction:column; gap:13px; }
+  .side-card { padding:17px; }
+  .card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:9px; margin-bottom:13px; }
+  .eyebrow { color:#7e9a99; font-size:9px; font-weight:950; letter-spacing:.12em; }
+  .card-title { margin-top:3px; font-size:16px; font-weight:950; letter-spacing:-.055em; }
+  .queue-badge { padding:6px 9px; border-radius:999px; color:#9b614a; background:#fff0e4; font-size:10px; font-weight:900; white-space:nowrap; }
+  .customer-box { position:relative; padding:13px; border:1px solid #f1dfc8; border-radius:16px; background:linear-gradient(135deg,#fff7e9,#fffdf6); }
+  .customer-row { display:flex; align-items:center; gap:11px; }
+  .customer-avatar { display:grid; place-items:center; width:48px; height:48px; flex:none; border-radius:16px; color:#fff; background:linear-gradient(145deg,#efa782,#db796d); box-shadow:0 7px 15px rgba(219,121,109,.2); }
+  .customer-avatar svg { width:28px;height:28px; }
+  .customer-name { color:#9a7565; font-size:10px; font-weight:850; }
+  .customer-order { margin-top:2px; color:#4b5145; font-size:16px; font-weight:950; letter-spacing:-.05em; }
+  .customer-pay { margin-top:3px; color:#a56d28; font-size:12px; font-weight:900; }
+  .customer-note { margin-top:10px; color:#917b66; font-size:10px; line-height:1.5; }
+  .button { display:flex; justify-content:center; align-items:center; width:100%; min-height:43px; gap:8px; border:0; border-radius:13px; padding:10px 12px; color:#fff; background:linear-gradient(145deg,#26a9a0,#167d81); box-shadow:0 7px 16px rgba(22,143,141,.2); font-size:12px; font-weight:950; cursor:pointer; transition:transform .16s ease,filter .16s ease,opacity .16s ease; }
+  .button:hover:not(:disabled) { transform:translateY(-1px); filter:brightness(1.04); }
+  .button:active:not(:disabled) { transform:translateY(1px); }
+  .button:disabled { color:#8aa09d; background:#e5eeea; box-shadow:none; cursor:not-allowed; }
+  .button.secondary { min-height:39px; color:#316b6e; background:#edf8f3; border:1px solid #d3e9df; box-shadow:none; }
+  .button.secondary:hover:not(:disabled) { background:#e3f4ec; }
+  .button.coral { color:#85543e; background:#fff1e3; border:1px solid #f4ddc5; box-shadow:none; }
+  .sell-button { margin-top:12px; }
+  .btn-sub { display:block; margin-top:2px; font-size:9px; font-weight:750; opacity:.8; }
+  .divider { height:1px; margin:14px 0; background:var(--line); }
+  .upgrade-meta { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 1px 10px; color:#73908e; font-size:10px; font-weight:800; }
+  .level-pips { display:flex; gap:4px; }
+  .pip { width:16px; height:6px; border-radius:99px; background:#dce9e2; }
+  .pip.on { background:linear-gradient(90deg,#48b7a4,#168b8a); }
+  .upgrade-desc { margin:0 0 11px; color:#6d8886; font-size:10px; line-height:1.5; }
+  .cost-row { display:flex; align-items:center; justify-content:space-between; margin-bottom:9px; font-size:11px; font-weight:850; }
+  .cost { color:#9b6b2c; }
+  .next-yield { color:#16827e; }
+  .employee-list { display:flex; flex-direction:column; gap:8px; }
+  .employee { display:flex; align-items:center; gap:10px; padding:10px; border:1px solid #e2ece5; border-radius:14px; background:#fbfdf8; }
+  .employee-icon { display:grid; place-items:center; width:36px; height:36px; flex:none; border-radius:12px; color:#438580; background:#e7f5ef; }
+  .employee-icon svg { width:21px;height:21px; }
+  .employee-copy { min-width:0; flex:1; }
+  .employee-name { font-size:11px; font-weight:950; }
+  .employee-desc { margin-top:2px; color:#829996; font-size:9px; line-height:1.35; }
+  .employee .hire { width:auto; min-width:70px; min-height:34px; padding:7px 9px; font-size:10px; }
+  .employee .hire.owned { color:#2c7e67; background:#e5f5e9; border:1px solid #cbe9d1; box-shadow:none; cursor:default; }
+  .progress-wrap { margin-top:11px; }
+  .progress-caption { display:flex; justify-content:space-between; gap:8px; margin-bottom:5px; color:#78918d; font-size:9px; font-weight:850; }
+  .progress-track { height:7px; overflow:hidden; border-radius:99px; background:#e7eee7; }
+  .progress-fill { height:100%; width:0; border-radius:99px; background:linear-gradient(90deg,#60c5ac,#e6bb66); transition:width .2s linear; }
+  .toast { position:absolute; left:50%; top:54px; z-index:3; transform:translate(-50%,-8px); opacity:0; padding:10px 15px; border:1px solid rgba(255,255,255,.82); border-radius:999px; color:#fff; background:rgba(22,111,116,.93); box-shadow:0 8px 24px rgba(21,78,83,.22); font-size:12px; font-weight:950; pointer-events:none; transition:.2s ease; white-space:nowrap; }
+  .toast.show { opacity:1; transform:translate(-50%,0); }
+  .modal { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:20px; background:rgba(22,55,66,.34); backdrop-filter:blur(8px); }
+  .modal[hidden] { display:none; }
+  .modal-card { width:min(520px,100%); padding:28px; border:1px solid rgba(255,255,255,.9); border-radius:26px; background:linear-gradient(145deg,#fffdf6,#f6fbef); box-shadow:0 24px 80px rgba(23,60,76,.24); text-align:center; }
+  .modal-mark { display:grid; place-items:center; width:67px; height:67px; margin:0 auto 13px; border-radius:23px; color:#fff; background:linear-gradient(145deg,#51bbaa,#147d83); box-shadow:0 10px 24px rgba(22,143,141,.2); }
+  .modal-mark svg { width:39px;height:39px; }
+  .modal-kicker { color:#67928a; font-size:10px; font-weight:950; letter-spacing:.16em; }
+  .modal h1 { margin:7px 0 8px; font-size:32px; letter-spacing:-.08em; }
+  .modal-copy { max-width:390px; margin:0 auto; color:#688487; font-size:13px; line-height:1.7; }
+  .modal-rules { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:19px 0; text-align:left; }
+  .rule { padding:10px; border:1px solid #e3ece0; border-radius:13px; background:#fff; }
+  .rule b { display:block; color:#39827c; font-size:10px; }
+  .rule span { display:block; margin-top:4px; color:#849793; font-size:9px; line-height:1.4; }
+  .modal .button { min-height:47px; font-size:13px; }
+  .modal-foot { margin-top:11px; color:#849996; font-size:10px; }
+  .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  button:focus-visible { outline:3px solid rgba(239,136,110,.68); outline-offset:3px; }
+  @media (max-width:1100px) {
+    .app { padding:16px; }
+    .layout { grid-template-columns:minmax(0,1fr) 310px; gap:12px; }
+    .stat { min-width:86px; padding:8px 10px; }
+    .topbar { flex-wrap:wrap; }
+    .top-stats { margin-left:auto; }
+  }
+  @media (max-width:820px) {
+    .layout { grid-template-columns:1fr; }
+    .canvas-wrap { height:58vw; min-height:360px; max-height:540px; }
+    .sidebar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+    .customer-card { grid-column:1/-1; }
+    .topbar { align-items:flex-start; }
+    .top-stats { order:3; width:100%; margin:0; display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
+    .stat { min-width:0; }
+    .head-actions { margin-left:auto; }
+  }
+  @media (max-width:560px) {
+    .app { padding:11px; }
+    .brand { min-width:0; }
+    .brand-title { font-size:17px; }
+    .brand-mark { width:41px;height:41px; }
+    .topbar { gap:10px; }
+    .top-stats { gap:5px; }
+    .stat { padding:8px 7px; border-radius:12px; }
+    .stat-label { font-size:8px; }
+    .stat-value { font-size:15px; }
+    .round-pill { min-width:0; }
+    .quiet-button { padding:8px 9px; font-size:10px; }
+    .canvas-wrap { height:72vw; min-height:300px; margin:0 7px; }
+    .scene-heading { padding:13px 14px 10px; }
+    .scene-footer { padding:10px 12px; font-size:9px; }
+    .hint-chip { max-width:80%; font-size:9px; }
+    .timer-chip { font-size:9px; }
+    .sidebar { gap:9px; }
+    .side-card { padding:13px; border-radius:18px; }
+    .card-title { font-size:14px; }
+    .employee { gap:7px; padding:8px; }
+    .employee-icon { width:31px;height:31px; }
+    .employee .hire { min-width:58px; padding:6px 7px; font-size:9px; }
+    .modal-card { padding:22px 17px; }
+    .modal h1 { font-size:27px; }
+    .modal-rules { gap:5px; }
+    .rule { padding:8px 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior:auto !important; transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none"><path d="M5 22.7c.8-7.2 4.3-12.1 11-14.4 6.7 2.3 10.2 7.2 11 14.4-6.2 4.5-15.8 4.5-22 0Z" fill="#FFE7B1" stroke="#FFF9E9" stroke-width="1.8"/><path d="M16 9.2v15.5M10.2 12.4l4 12.5M21.8 12.4l-4 12.5M7.7 17.2l6.3 7.7M24.3 17.2 18 24.9" stroke="#D98E6A" stroke-width="1.3" stroke-linecap="round"/></svg>
+      </div>
+      <div class="brand-copy"><div class="brand-kicker">SEASIDE SHELL SHOP</div><div class="brand-title">조개마을</div></div>
+    </div>
+    <div class="top-stats" aria-label="게임 현황">
+      <div class="stat round-pill"><div class="stat-label">현재 라운드</div><div class="stat-value" id="roundValue">1 라운드</div></div>
+      <div class="stat"><div class="stat-label">조개 인벤토리</div><div class="stat-value"><span id="shellValue">0</span>개</div></div>
+      <div class="stat"><div class="stat-label">보유 금액</div><div class="stat-value"><span id="moneyValue">0</span>원</div></div>
+      <div class="stat"><div class="stat-label">응대한 손님</div><div class="stat-value" id="servedValue">0명</div></div>
+    </div>
+    <div class="head-actions"><button class="quiet-button" id="pauseButton" type="button" aria-label="게임 일시정지">일시정지</button></div>
+  </header>
+
+  <main class="layout">
+    <section class="scene-card" aria-label="바닷가 게임 화면">
+      <div class="scene-heading">
+        <div><div class="scene-title">오늘의 바닷가</div><div class="scene-subtitle">조개를 모아 손님에게 팔고, 작은 해변 가게를 키워보세요.</div></div>
+        <div class="weather-chip"><span class="sun-dot"></span>잔잔한 오후</div>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="world" aria-label="WASD로 이동하는 바닷가. 위쪽 중앙의 조개밭에 들어가 조개를 수거하고 오른쪽 가게 손님에게 판매하세요."></canvas>
+        <div class="scene-hud" aria-hidden="true">
+          <div class="scene-topline"><div class="mini-chip">조개밭 <strong id="patchStock">0개</strong></div><div class="mini-chip">생산량 <strong id="yieldValue">5초마다 1개</strong></div></div>
+          <div class="scene-bottomline"><div class="hint-chip" id="actionHint">이동: WASD · 조개밭에 들어가면 조개를 자동으로 주워요</div><div class="timer-chip">다음 조개 <span id="spawnTime">5.0</span>초</div></div>
+        </div>
+        <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      </div>
+      <div class="scene-footer"><span>바다와 모래사장을 오가며 직접 운영해보세요.</span><span class="keys"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> 이동 <kbd>E</kbd> 판매</span></div>
+    </section>
+
+    <aside class="sidebar" aria-label="가게 관리">
+      <section class="side-card customer-card">
+        <div class="card-head"><div><div class="eyebrow">손님 주문</div><div class="card-title">해변 가게</div></div><div class="queue-badge" id="customerStatus">손님 대기 중</div></div>
+        <div class="customer-box">
+          <div class="customer-row">
+            <div class="customer-avatar" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><path d="M7 27c.7-5.5 3.7-8.4 9-8.4s8.3 2.9 9 8.4" fill="#FFE5D3"/><circle cx="16" cy="11" r="7" fill="#FFD7BD"/><path d="M9.2 11c.5-5 3-7.8 7.3-7.8 4.2 0 6.6 2.8 7.1 7.1-2.4-.8-4.7-2.5-6.5-4.8-1.6 2.6-4.4 4.4-7.9 5.5Z" fill="#594B4B"/><path d="M13 12.5h.1m5.8 0h.1" stroke="#604A42" stroke-width="1.6" stroke-linecap="round"/><path d="M14 15.4c1.1.8 2.4.8 3.5 0" stroke="#CB7D6D" stroke-width="1.2" stroke-linecap="round"/></svg></div>
+            <div><div class="customer-name" id="customerName">손님이 오고 있어요</div><div class="customer-order" id="orderValue">주문을 기다리는 중</div><div class="customer-pay" id="rewardValue">잠시만 기다려주세요</div></div>
+          </div>
+          <div class="customer-note" id="customerNote">손님이 도착하면 원하는 조개 수와 보상이 표시됩니다.</div>
+        </div>
+        <button class="button sell-button" id="sellButton" type="button" disabled><span id="sellButtonText">손님 가까이 이동하세요</span><span class="btn-sub" id="sellButtonSub">손님 옆에서 E 키</span></button>
+        <div class="progress-wrap"><div class="progress-caption"><span id="roundProgressLabel">1라운드 목표</span><span id="roundProgressText">0 / 20명</span></div><div class="progress-track"><div class="progress-fill" id="roundProgress"></div></div></div>
+      </section>
+
+      <section class="side-card">
+        <div class="card-head"><div><div class="eyebrow">생산 구역</div><div class="card-title">조개밭 업그레이드</div></div><div class="queue-badge" id="upgradeBadge">0 / 5 단계</div></div>
+        <div class="upgrade-meta"><span id="upgradeLevelText">현재 단계</span><span class="level-pips" id="levelPips" aria-hidden="true"></span></div>
+        <p class="upgrade-desc" id="upgradeDescription">생산 속도를 높이고, 한 번에 더 많은 조개를 얻으세요.</p>
+        <div class="cost-row"><span>다음 강화</span><span class="cost" id="upgradeCost">100원</span></div>
+        <div class="cost-row"><span>강화 후 생산량</span><span class="next-yield" id="nextYield">5초마다 2개</span></div>
+        <button class="button secondary" id="upgradeButton" type="button">조개밭 강화</button>
+      </section>
+
+      <section class="side-card">
+        <div class="card-head"><div><div class="eyebrow">함께 일하기</div><div class="card-title">직원 고용</div></div><div class="queue-badge">한 번 고용하면 계속 근무</div></div>
+        <div class="employee-list">
+          <div class="employee">
+            <div class="employee-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3.5c-4.5 2.7-6.3 6.1-5.4 10.1.7 3.2 3 5.5 5.4 7 2.4-1.5 4.7-3.8 5.4-7 .9-4-1-7.4-5.4-10.1Z" fill="#B9E2D0" stroke="#4B9D89" stroke-width="1.3"/><path d="M12 5.3v13.2m-3.1-9.2 3.1 9.2m3.1-9.2L12 18.5" stroke="#4B9D89" stroke-width="1.1" stroke-linecap="round"/></svg></div>
+            <div class="employee-copy"><div class="employee-name">조개 수거 직원</div><div class="employee-desc">조개밭의 조개를 자동으로 가져옵니다.</div></div>
+            <button class="button hire" id="collectorButton" type="button">500원 고용</button>
+          </div>
+          <div class="employee">
+            <div class="employee-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="4" y="5" width="16" height="14" rx="3" fill="#D9E9C8" stroke="#83A26E" stroke-width="1.3"/><path d="M8 9h8M8 12h4m-3.8 4h7.6" stroke="#66865D" stroke-width="1.4" stroke-linecap="round"/><circle cx="16.7" cy="12.1" r="1.2" fill="#E9AE60"/></svg></div>
+            <div class="employee-copy"><div class="employee-name">계산 직원</div><div class="employee-desc">재고가 충분하면 손님을 자동 응대합니다.</div></div>
+            <button class="button hire" id="cashierButton" type="button">800원 고용</button>
+          </div>
+        </div>
+      </section>
+    </aside>
+  </main>
+</div>
+
+<div class="modal" id="startModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <div class="modal-mark" aria-hidden="true"><svg viewBox="0 0 40 40" fill="none"><path d="M5.5 28.5c1.2-9.2 6-15.5 14.5-18.5 8.5 3 13.3 9.3 14.5 18.5-8.2 5.8-20.8 5.8-29 0Z" fill="#FFE7B1" stroke="#FFF9E9" stroke-width="2.2"/><path d="M20 10.2v19.4m-7.7-15.6 5.3 15.6m10.1-15.6-5.3 15.6m-10.7-9.4 8.3 10m11.7-10-8.3 10" stroke="#D98E6A" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+    <div class="modal-kicker">조개를 모으고, 가게를 키우세요</div>
+    <h1 id="modalTitle">조개마을</h1>
+    <p class="modal-copy">잔잔한 바닷가에서 조개 장사를 시작해요. 조개밭을 오가며 재고를 모으고, 손님을 맞이해 번 돈으로 해변 가게를 키워보세요.</p>
+    <div class="modal-rules"><div class="rule"><b>WASD 이동</b><span>모래사장을 돌아다녀요.</span></div><div class="rule"><b>조개밭 수거</b><span>네모 구역에 들어가면 자동 수거.</span></div><div class="rule"><b>E 키 판매</b><span>손님 옆에서 주문을 판매해요.</span></div></div>
+    <button class="button" id="startButton" type="button">가게 문 열기</button>
+    <div class="modal-foot">게임 상태는 이 브라우저에 자동 저장됩니다.</div>
+  </div>
+</div>
+<div class="sr-only" id="announcer" aria-live="polite"></div>
+
+<script>
+(() => {
+  "use strict";
+  const WORLD = { width: 1000, height: 600 };
+  const PATCH = { x: 391, y: 245, width: 218, height: 157 };
+  const SHOP = { x: 822, y: 420 };
+  const KEY = "shellshore-save-v1";
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("world");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const el = {
+    round: $("roundValue"), shells: $("shellValue"), money: $("moneyValue"), served: $("servedValue"),
+    patch: $("patchStock"), yield: $("yieldValue"), spawn: $("spawnTime"), hint: $("actionHint"),
+    customerStatus: $("customerStatus"), customerName: $("customerName"), order: $("orderValue"), reward: $("rewardValue"), note: $("customerNote"),
+    sell: $("sellButton"), sellText: $("sellButtonText"), sellSub: $("sellButtonSub"),
+    goal: $("roundProgressLabel"), goalText: $("roundProgressText"), progress: $("roundProgress"),
+    badge: $("upgradeBadge"), levelText: $("upgradeLevelText"), pips: $("levelPips"), description: $("upgradeDescription"), cost: $("upgradeCost"), nextYield: $("nextYield"), upgrade: $("upgradeButton"),
+    collector: $("collectorButton"), cashier: $("cashierButton"), toast: $("toast"), modal: $("startModal"),
+    pause: $("pauseButton"), announcer: $("announcer")
+  };
+
+  function freshState() {
+    return {
+      round: 1, servedInRound: 0, totalServed: 0, shells: 0, money: 0, patchStock: 0,
+      upgradeLevel: 0, speedLevel: 0, collector: false, cashier: false,
+      player: { x: 326, y: 482 }
+    };
+  }
+  function loadState() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (!saved || typeof saved !== "object") return freshState();
+      const base = freshState();
+      return {
+        ...base, ...saved,
+        round: saved.round === 2 ? 2 : 1,
+        servedInRound: Math.max(0, Number(saved.servedInRound) || 0),
+        totalServed: Math.max(0, Number(saved.totalServed) || 0),
+        shells: Math.max(0, Number(saved.shells) || 0),
+        money: Math.max(0, Number(saved.money) || 0),
+        patchStock: Math.max(0, Number(saved.patchStock) || 0),
+        upgradeLevel: Math.min(5, Math.max(0, Number(saved.upgradeLevel) || 0)),
+        speedLevel: Math.min(5, Math.max(0, Number(saved.speedLevel) || 0)),
+        collector: Boolean(saved.collector), cashier: Boolean(saved.cashier),
+        player: { x: clamp(Number(saved.player?.x) || 326, 38, 962), y: clamp(Number(saved.player?.y) || 482, 228, 565) }
+      };
+    } catch (_) { return freshState(); }
+  }
+  const state = loadState();
+  let customer = null;
+  let customerDelay = 0;
+  let spawnTimer = 5;
+  let collectorTimer = 1.5;
+  let cashierTimer = 1.0;
+  let toastTimer = 0;
+  let roundBannerTimer = 0;
+  let running = false;
+  let paused = false;
+  let lastFrame = 0;
+  let uiTimer = 0;
+  let saveTimer = 0;
+  let animationTime = 0;
+  let walkAmount = 0;
+  const keys = new Set();
+  const floaters = [];
+
+  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+  function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+  function productionRate() { return Math.max(2.5, 5 - state.speedLevel * 0.5); }
+  function shellsPerCycle() { return state.round === 1 ? 1 + state.upgradeLevel : 1 + state.upgradeLevel * 5; }
+  function upgradeCost() { return state.round === 1 ? 100 + state.upgradeLevel * 100 : 1000 + state.upgradeLevel * 500; }
+  function makeCustomer() {
+    return state.round === 1
+      ? { order: randomInt(1, 50), reward: randomInt(20, 100), serial: state.totalServed + 1 }
+      : { order: randomInt(50, 100), reward: randomInt(100, 200), serial: state.totalServed + 1 };
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (_) { /* Private browsing can disable storage. */ }
+  }
+  function showToast(text, duration = 1.8) {
+    el.toast.textContent = text;
+    el.toast.classList.add("show");
+    el.announcer.textContent = text;
+    toastTimer = duration;
+  }
+  function addFloater(x, y, text, color = "#fff7d8") {
+    floaters.push({ x, y, text, color, life: 1.25, max: 1.25 });
+  }
+  function startGame() {
+    running = true;
+    paused = false;
+    el.modal.hidden = true;
+    if (!customer && customerDelay <= 0) customer = makeCustomer();
+    lastFrame = performance.now();
+    el.pause.textContent = "일시정지";
+    showToast("가게를 열었어요. 조개밭부터 살펴보세요.", 2.2);
+    renderUI();
+    save();
+  }
+  function togglePause() {
+    if (!running) { startGame(); return; }
+    paused = !paused;
+    el.pause.textContent = paused ? "계속하기" : "일시정지";
+    if (paused) {
+      el.modal.hidden = false;
+      $("modalTitle").textContent = "잠깐 쉬어가기";
+      document.querySelector(".modal-kicker").textContent = "파도는 기다려줄게요";
+      document.querySelector(".modal-copy").textContent = "잠시 멈췄어요. 다시 시작하면 조개 수집과 생산이 이어집니다.";
+      $("startButton").textContent = "계속하기";
+    } else {
+      el.modal.hidden = true;
+      $("modalTitle").textContent = "조개마을";
+      document.querySelector(".modal-kicker").textContent = "조개를 모으고, 가게를 키우세요";
+      document.querySelector(".modal-copy").textContent = "잔잔한 바닷가에서 조개 장사를 시작해요. 조개밭을 오가며 재고를 모으고, 손님을 맞이해 번 돈으로 해변 가게를 키워보세요.";
+      $("startButton").textContent = "가게 문 열기";
+      lastFrame = performance.now();
+    }
+    renderUI();
+    save();
+  }
+  function nearShop() {
+    return Math.hypot(state.player.x - SHOP.x, state.player.y - SHOP.y) < 108;
+  }
+  function collectPatch() {
+    if (state.patchStock < 1) return;
+    const amount = state.patchStock;
+    state.patchStock = 0;
+    state.shells += amount;
+    addFloater(state.player.x, state.player.y - 35, `+${amount} 조개`, "#fff4d0");
+    showToast(`조개밭에서 ${amount}개를 주웠어요.`, 1.35);
+    save();
+    renderUI();
+  }
+  function sellToCustomer(automatic = false) {
+    if (!customer || state.shells < customer.order) return false;
+    if (!automatic && !nearShop()) {
+      showToast("손님이 있는 가게 가까이 가주세요.");
+      return false;
+    }
+    const sold = customer.order;
+    const earned = customer.reward;
+    state.shells -= sold;
+    state.money += earned;
+    state.totalServed += 1;
+    state.servedInRound += 1;
+    addFloater(SHOP.x, SHOP.y - 60, `+${earned}원`, "#fff2be");
+    showToast(`${sold}개 판매! ${earned}원을 받았어요.`, 1.65);
+    customer = null;
+    customerDelay = automatic ? 1.65 : 2.3;
+    if (state.round === 1 && state.servedInRound >= 20) {
+      state.round = 2;
+      state.servedInRound = 0;
+      state.upgradeLevel = 0;
+      roundBannerTimer = 3.2;
+      customerDelay = 2.0;
+      showToast("2 라운드 시작! 새 주문은 50~100개예요.", 3.0);
+    }
+    save();
+    renderUI();
+    return true;
+  }
+  function buyUpgrade() {
+    if (state.upgradeLevel >= 5) return;
+    const cost = upgradeCost();
+    if (state.money < cost) { showToast("보유 금액이 부족해요."); return; }
+    state.money -= cost;
+    state.upgradeLevel += 1;
+    state.speedLevel = Math.min(5, state.speedLevel + 1);
+    spawnTimer = Math.min(spawnTimer, productionRate());
+    showToast(`조개밭 강화 완료! 생산량 ${shellsPerCycle()}개`, 1.8);
+    save();
+    renderUI();
+  }
+  function hire(which) {
+    const isCollector = which === "collector";
+    const owned = isCollector ? state.collector : state.cashier;
+    const cost = isCollector ? 500 : 800;
+    if (owned) return;
+    if (state.money < cost) { showToast("보유 금액이 부족해요."); return; }
+    state.money -= cost;
+    if (isCollector) {
+      state.collector = true;
+      collectorTimer = 0.2;
+      showToast("조개 수거 직원이 출근했어요.");
+    } else {
+      state.cashier = true;
+      cashierTimer = 0.3;
+      showToast("계산 직원이 가게를 맡았어요.");
+    }
+    save();
+    renderUI();
+  }
+  function enterRoundTwo() { /* Round transition is triggered by the twentieth completed sale. */ }
+
+  function update(delta) {
+    if (!running || paused) return;
+    animationTime += delta;
+    const movement = { x: 0, y: 0 };
+    if (keys.has("w") || keys.has("arrowup")) movement.y -= 1;
+    if (keys.has("s") || keys.has("arrowdown")) movement.y += 1;
+    if (keys.has("a") || keys.has("arrowleft")) movement.x -= 1;
+    if (keys.has("d") || keys.has("arrowright")) movement.x += 1;
+    const moving = movement.x !== 0 || movement.y !== 0;
+    if (moving) {
+      const length = Math.hypot(movement.x, movement.y) || 1;
+      const speed = 190;
+      state.player.x = clamp(state.player.x + movement.x / length * speed * delta, 34, 966);
+      state.player.y = clamp(state.player.y + movement.y / length * speed * delta, 226, 566);
+      walkAmount += delta * 12;
+    }
+
+    if (state.player.x > PATCH.x - 18 && state.player.x < PATCH.x + PATCH.width + 18 && state.player.y > PATCH.y - 16 && state.player.y < PATCH.y + PATCH.height + 16) collectPatch();
+
+    spawnTimer -= delta;
+    if (spawnTimer <= 0) {
+      const count = shellsPerCycle();
+      state.patchStock += count;
+      spawnTimer += productionRate();
+      addFloater(PATCH.x + PATCH.width / 2, PATCH.y + 35, `+${count}`, "#fff0c8");
+      if (state.patchStock === count) showToast(`조개 ${count}개가 조개밭에 생겼어요.`, 1.15);
+      save();
+    }
+
+    if (!customer) {
+      customerDelay -= delta;
+      if (customerDelay <= 0) {
+        customer = makeCustomer();
+        customerDelay = 0;
+        showToast("새 손님이 도착했어요.", 1.2);
+        renderUI();
+      }
+    }
+    if (state.collector) {
+      collectorTimer -= delta;
+      if (collectorTimer <= 0) {
+        collectorTimer = 1.8;
+        if (state.patchStock > 0) {
+          const amount = state.patchStock;
+          state.patchStock = 0;
+          state.shells += amount;
+          addFloater(588, 338, `+${amount} 조개`, "#fff4d0");
+          showToast(`수거 직원이 조개 ${amount}개를 가져왔어요.`, 1.15);
+          save();
+          renderUI();
+        }
+      }
+    }
+    if (state.cashier) {
+      cashierTimer -= delta;
+      if (cashierTimer <= 0) {
+        cashierTimer = 1.6;
+        if (customer && state.shells >= customer.order) sellToCustomer(true);
+      }
+    }
+    if (toastTimer > 0) {
+      toastTimer -= delta;
+      if (toastTimer <= 0) el.toast.classList.remove("show");
+    }
+    if (roundBannerTimer > 0) roundBannerTimer -= delta;
+    for (let i = floaters.length - 1; i >= 0; i--) {
+      floaters[i].life -= delta;
+      floaters[i].y -= delta * 24;
+      if (floaters[i].life <= 0) floaters.splice(i, 1);
+    }
+    uiTimer += delta;
+    saveTimer += delta;
+    if (uiTimer >= .18) { uiTimer = 0; renderUI(); }
+    if (saveTimer >= 2) { saveTimer = 0; save(); }
+  }
+
+  function renderUI() {
+    el.round.textContent = `${state.round} 라운드`;
+    el.shells.textContent = state.shells.toLocaleString("ko-KR");
+    el.money.textContent = state.money.toLocaleString("ko-KR");
+    el.served.textContent = `${state.totalServed.toLocaleString("ko-KR")}명`;
+    el.patch.textContent = `${state.patchStock.toLocaleString("ko-KR")}개`;
+    el.yield.textContent = `${productionRate().toFixed(1).replace(".0", "")}초마다 ${shellsPerCycle()}개`;
+    el.spawn.textContent = Math.max(0, spawnTimer).toFixed(1);
+    el.badge.textContent = `${state.upgradeLevel} / 5 단계`;
+    el.levelText.textContent = `현재 단계 ${state.upgradeLevel}`;
+    el.pips.innerHTML = Array.from({length:5}, (_, i) => `<span class="pip ${i < state.upgradeLevel ? "on" : ""}"></span>`).join("");
+    const amountIncrease = state.round === 1 ? 1 : 5;
+    el.description.textContent = state.round === 1
+      ? `강화 1회마다 생산량 +1개, 생산 주기 -0.5초 (최소 2.5초).`
+      : `강화 1회마다 생산량 +5개, 생산 주기 -0.5초 (최소 2.5초).`;
+    if (state.upgradeLevel >= 5) {
+      el.cost.textContent = "최대 단계";
+      el.nextYield.textContent = "강화 완료";
+      el.upgrade.disabled = true;
+      el.upgrade.textContent = "최대 강화 완료";
+    } else {
+      el.cost.textContent = `${upgradeCost().toLocaleString("ko-KR")}원`;
+      el.nextYield.textContent = `${productionRate().toFixed(1).replace(".0", "")}초마다 ${shellsPerCycle() + amountIncrease}개`;
+      el.upgrade.disabled = state.money < upgradeCost();
+      el.upgrade.textContent = `조개밭 강화 · ${upgradeCost().toLocaleString("ko-KR")}원`;
+    }
+    if (customer) {
+      el.customerStatus.textContent = "주문 대기 중";
+      el.customerName.textContent = `손님 #${customer.serial}`;
+      el.order.textContent = `조개 ${customer.order}개 주문`;
+      el.reward.textContent = `판매 보상 ${customer.reward}원`;
+      el.note.textContent = state.shells >= customer.order
+        ? (nearShop() ? "재고가 충분해요. E 키 또는 아래 버튼으로 판매하세요." : "조개를 들고 오른쪽 가게 손님 가까이 가면 판매할 수 있어요.")
+        : `조개가 ${Math.max(0, customer.order - state.shells)}개 더 필요해요. 조개밭을 확인해보세요.`;
+      el.sell.disabled = !nearShop() || state.shells < customer.order || !running || paused;
+      el.sellText.textContent = state.shells < customer.order ? `조개 ${Math.max(0, customer.order - state.shells)}개 더 필요` : nearShop() ? `${customer.order}개 판매하기` : "손님 가까이 이동하세요";
+      el.sellSub.textContent = nearShop() ? "E 키를 눌러 주문 완료" : "가게 옆에서 E 키";
+    } else {
+      el.customerStatus.textContent = "새 손님 오는 중";
+      el.customerName.textContent = "다음 손님을 기다리는 중";
+      el.order.textContent = "곧 새 주문이 도착해요";
+      el.reward.textContent = "잠시만 기다려주세요";
+      el.note.textContent = `새 손님까지 약 ${Math.max(0, customerDelay).toFixed(1)}초`;
+      el.sell.disabled = true;
+      el.sellText.textContent = "손님을 기다리는 중";
+      el.sellSub.textContent = "새 손님이 곧 도착해요";
+    }
+    if (state.round === 1) {
+      el.goal.textContent = "2 라운드까지";
+      el.goalText.textContent = `${state.servedInRound} / 20명`;
+      el.progress.style.width = `${Math.min(100, state.servedInRound / 20 * 100)}%`;
+    } else {
+      el.goal.textContent = "2 라운드 운영";
+      el.goalText.textContent = `${state.totalServed}명 응대`;
+      el.progress.style.width = `${(state.totalServed % 20) / 20 * 100}%`;
+    }
+    updateEmployeeButton(el.collector, state.collector, 500, "수거 직원 고용");
+    updateEmployeeButton(el.cashier, state.cashier, 800, "계산 직원 고용");
+    el.hint.textContent = !running ? "가게 문을 열고 조개밭을 살펴보세요" : paused ? "일시정지 중 — 계속하기를 눌러 재개" : nearShop() ? (customer && state.shells >= customer.order ? `손님에게 E 키로 조개 ${customer.order}개 판매` : "손님 곁이에요 · 주문 수량을 채우면 E 키로 판매") : "WASD 이동 · 조개밭에 들어가면 조개를 자동으로 주워요";
+  }
+  function updateEmployeeButton(button, owned, cost, label) {
+    if (owned) {
+      button.textContent = "근무 중";
+      button.classList.add("owned");
+      button.disabled = true;
+      button.setAttribute("aria-label", `${label}, 이미 고용되어 계속 근무 중`);
+    } else {
+      button.textContent = `${cost}원 고용`;
+      button.classList.remove("owned");
+      button.disabled = state.money < cost;
+      button.setAttribute("aria-label", `${label}, ${cost}원`);
+    }
+  }
+
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const width = Math.round(rect.width * dpr), height = Math.round(rect.height * dpr);
+    if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+    const scale = Math.min(rect.width / WORLD.width, rect.height / WORLD.height);
+    const ox = (rect.width - WORLD.width * scale) / 2;
+    const oy = (rect.height - WORLD.height * scale) / 2;
+    ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
+  }
+  function draw() {
+    resizeCanvas();
+    const r = canvas.getBoundingClientRect();
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const scale = Math.min(r.width / WORLD.width, r.height / WORLD.height);
+    const ox = (r.width - WORLD.width * scale) / 2, oy = (r.height - WORLD.height * scale) / 2;
+    ctx.setTransform(dpr * scale,0,0,dpr * scale,dpr * ox,dpr * oy);
+    drawWorld();
+  }
+  function drawWorld() {
+    const t = animationTime;
+    const ocean = ctx.createLinearGradient(0,0,0,248);
+    ocean.addColorStop(0,"#58bfc4"); ocean.addColorStop(.55,"#73d0c9"); ocean.addColorStop(1,"#a4dfce");
+    ctx.fillStyle = ocean; ctx.fillRect(0,0,1000,600);
+    // distant water bands and softly moving ripples
+    for (let row=0; row<5; row++) {
+      const y=39+row*32;
+      ctx.beginPath();
+      for (let x=0; x<=1000; x+=20) {
+        const yy=y+Math.sin(x*.018+t*(.55+row*.04)+row)*3.3;
+        if (x===0) ctx.moveTo(x,yy); else ctx.lineTo(x,yy);
+      }
+      ctx.strokeStyle=`rgba(238,255,237,${.13+row*.012})`; ctx.lineWidth=2; ctx.stroke();
+    }
+    for (let i=0;i<23;i++) {
+      const x=(i*137+((t*8)%137))%1040-20, y=20+(i*53)%196;
+      ctx.beginPath(); ctx.ellipse(x,y,8+(i%4)*3,1.4,0,0,Math.PI*2); ctx.fillStyle="rgba(255,255,226,.35)"; ctx.fill();
+    }
+    // fine horizon line
+    ctx.fillStyle="rgba(255,255,230,.28)"; ctx.fillRect(0,211,1000,2);
+    // shallow-water wash
+    ctx.fillStyle="#d5ead1"; ctx.fillRect(0,214,1000,29);
+    // shore foam ribbons
+    for (let layer=0;layer<3;layer++) {
+      ctx.beginPath();
+      for (let x=0;x<=1000;x+=10) {
+        const y=226+layer*5+Math.sin(x*.016+t*1.2+layer*.8)*4+Math.sin(x*.037-t*.7)*2;
+        if(x===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+      }
+      ctx.strokeStyle=layer===1?"rgba(255,255,243,.88)":"rgba(255,255,255,.45)"; ctx.lineWidth=layer===1?5:2.5;ctx.lineCap="round";ctx.stroke();
+    }
+    const sand=ctx.createLinearGradient(0,235,0,600); sand.addColorStop(0,"#f4e4bb");sand.addColorStop(.5,"#f3dfae");sand.addColorStop(1,"#ebd09c");ctx.fillStyle=sand;ctx.fillRect(0,238,1000,362);
+    // subtle sand contours and speckles
+    for(let i=0;i<12;i++){
+      const y=260+i*30+Math.sin(i*3+t*.25)*4;
+      ctx.beginPath();ctx.moveTo(0,y);ctx.bezierCurveTo(260,y-13,680,y+18,1000,y-6);ctx.strokeStyle="rgba(255,255,240,.13)";ctx.lineWidth=9;ctx.stroke();
+    }
+    for(let i=0;i<95;i++){
+      const x=(i*193+37)%1000, y=253+(i*97)%335, radius=(i%3)*.55+.65;
+      ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fillStyle=i%2?"rgba(173,136,83,.15)":"rgba(255,255,239,.43)";ctx.fill();
+    }
+    drawPalm(98,335,.88); drawPalm(934,303,.68);
+    drawUmbrella(161,421,.78,"#f48f78","#fff3d2");
+    drawUmbrella(958,515,.59,"#77b8aa","#fff2d4");
+    drawCrab(280,512,.8); drawBucket(242,535,.72);
+    drawShop();
+    drawPatch();
+    drawStaff();
+    drawCustomer();
+    drawPlayer();
+    drawFloaters();
+    if(roundBannerTimer>0 && state.round===2) drawRoundBanner();
+    if(paused) drawPauseVeil();
+  }
+  function drawPalm(x,y,s) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(98,86,57,.12)";ctx.beginPath();ctx.ellipse(8,12,54,15,-.08,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#9b714b";ctx.lineWidth=11;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(0,12);ctx.quadraticCurveTo(9,-16,3,-75);ctx.stroke();
+    ctx.strokeStyle="#bd8d5d";ctx.lineWidth=2.4;for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(-4,3-i*17);ctx.lineTo(5,4-i*17);ctx.stroke();}
+    const fronds=[[0,-78,-54,-113],[0,-78,49,-119],[0,-78,-67,-79],[0,-78,68,-82],[0,-78,-34,-51],[0,-78,40,-49]];
+    fronds.forEach((f,i)=>{ctx.strokeStyle=i%2?"#468d67":"#579c72";ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(f[0],f[1]);ctx.quadraticCurveTo(f[2]*.45,f[3]-8,f[2],f[3]);ctx.stroke();ctx.strokeStyle="rgba(217,237,172,.53)";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(0,-78);ctx.lineTo(f[2],f[3]);ctx.stroke();});
+    ctx.fillStyle="#e9a966";for(const c of [[-5,-74],[6,-70],[0,-63]]){ctx.beginPath();ctx.arc(c[0],c[1],5,0,Math.PI*2);ctx.fill();}
+    ctx.restore();
+  }
+  function drawUmbrella(x,y,s,a,b) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);
+    ctx.fillStyle="rgba(91,78,53,.15)";ctx.beginPath();ctx.ellipse(4,30,48,12,-.1,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#a17c52";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(0,-6);ctx.lineTo(6,38);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(-48,-6);ctx.quadraticCurveTo(-40,-44,0,-49);ctx.quadraticCurveTo(40,-44,48,-6);ctx.quadraticCurveTo(2,5,-48,-6);ctx.closePath();ctx.fillStyle=a;ctx.fill();
+    ctx.save();ctx.clip();ctx.fillStyle=b;ctx.beginPath();ctx.moveTo(0,-50);ctx.lineTo(10,3);ctx.lineTo(25,1);ctx.lineTo(19,-43);ctx.closePath();ctx.fill();ctx.restore();
+    ctx.strokeStyle="rgba(153,103,79,.35)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,-48);ctx.lineTo(0,0);ctx.moveTo(-25,-37);ctx.quadraticCurveTo(-16,-6,-3,0);ctx.moveTo(25,-37);ctx.quadraticCurveTo(16,-6,3,0);ctx.stroke();
+    ctx.restore();
+  }
+  function drawCrab(x,y,s) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="rgba(95,66,43,.12)";ctx.beginPath();ctx.ellipse(0,12,19,5,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#d76f5d";ctx.lineWidth=2.7;for(let d of [-1,1]){for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(d*9,0+i*2);ctx.lineTo(d*(17+i*3),5+i*4);ctx.stroke();}}
+    ctx.fillStyle="#e88068";ctx.beginPath();ctx.ellipse(0,0,14,9,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#fff3d2";ctx.beginPath();ctx.arc(-5,-5,3.8,0,Math.PI*2);ctx.arc(5,-5,3.8,0,Math.PI*2);ctx.fill();ctx.fillStyle="#384a4b";ctx.beginPath();ctx.arc(-5,-5,1.3,0,Math.PI*2);ctx.arc(5,-5,1.3,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+  function drawBucket(x,y,s) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="rgba(113,94,61,.12)";ctx.beginPath();ctx.ellipse(0,15,22,7,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-14,-8);ctx.lineTo(-10,12);ctx.quadraticCurveTo(0,16,10,12);ctx.lineTo(14,-8);ctx.closePath();ctx.fillStyle="#80bdb0";ctx.fill();ctx.strokeStyle="#558f87";ctx.lineWidth=2;ctx.stroke();ctx.beginPath();ctx.ellipse(0,-8,14,5,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+  }
+  function drawShop() {
+    ctx.save();
+    // kiosk shadow and counter
+    ctx.fillStyle="rgba(94,77,48,.15)";ctx.beginPath();ctx.ellipse(831,480,131,24,-.04,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#ba8a5d";ctx.fillRect(747,373,170,77);ctx.fillStyle="#d6a16e";ctx.fillRect(756,382,151,45);
+    ctx.fillStyle="#9c674b";ctx.fillRect(738,421,188,23);ctx.fillStyle="#f1c98d";ctx.fillRect(745,444,174,10);
+    // striped awning
+    ctx.beginPath();ctx.moveTo(737,370);ctx.lineTo(756,320);ctx.lineTo(910,320);ctx.lineTo(929,370);ctx.closePath();ctx.fillStyle="#fff5d9";ctx.fill();
+    for(let i=0;i<6;i++){ctx.beginPath();ctx.moveTo(756+i*27,321);ctx.lineTo(769+i*27,369);ctx.lineTo(787+i*27,369);ctx.lineTo(774+i*27,321);ctx.closePath();ctx.fillStyle=i%2===0?"#ed9479":"#fff1d1";ctx.fill();}
+    ctx.strokeStyle="#b87661";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(737,370);ctx.lineTo(929,370);ctx.stroke();
+    // sign board
+    ctx.fillStyle="#fff8e5";roundedRect(ctx,779,334,108,26,8);ctx.fill();ctx.fillStyle="#4b847c";ctx.font="900 12px system-ui, sans-serif";ctx.textAlign="center";ctx.fillText("조개 가게",833,352);
+    // shell basket on counter
+    ctx.fillStyle="#c77d63";roundedRect(ctx,786,389,52,24,7);ctx.fill();for(let i=0;i<3;i++)drawShell(798+i*15,395+(i%2)*3, .28, "#efc99c");
+    // small flower pot
+    ctx.fillStyle="#ce8b68";ctx.fillRect(875,397,18,21);ctx.fillStyle="#5b9b72";ctx.beginPath();ctx.arc(884,391,12,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f2c765";ctx.beginPath();ctx.arc(884,390,4,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  }
+  function roundedRect(c,x,y,w,h,r) { c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath(); }
+  function drawPatch() {
+    const x=PATCH.x,y=PATCH.y,w=PATCH.width,h=PATCH.height;
+    ctx.save();ctx.fillStyle="rgba(101,82,46,.14)";roundedRect(ctx,x+5,y+8,w,h,18);ctx.fill();
+    roundedRect(ctx,x,y,w,h,17);ctx.fillStyle="#d9bb83";ctx.fill();
+    roundedRect(ctx,x+8,y+8,w-16,h-16,12);ctx.fillStyle="#e9d09e";ctx.fill();
+    // dashed clear border denotes the guaranteed production zone
+    ctx.setLineDash([8,6]);ctx.lineWidth=3;ctx.strokeStyle="#fff9e7";roundedRect(ctx,x+2,y+2,w-4,h-4,16);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle="rgba(122,91,48,.58)";ctx.font="900 12px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("조개 생산 구역",x+w/2,y+28);
+    ctx.fillStyle="rgba(122,91,48,.7)";ctx.font="700 9px system-ui,sans-serif";ctx.fillText(`다음 생산까지 ${Math.max(0,spawnTimer).toFixed(1)}초`,x+w/2,y+43);
+    const count=Math.min(state.patchStock,24);
+    const positions=[[57,75],[90,72],[130,76],[165,73],[44,101],[77,112],[111,99],[150,110],[181,101],[61,132],[99,133],[140,131],[171,132],[95,82],[128,114],[47,123],[183,83],[114,77],[74,94],[155,91],[136,97],[69,118],[162,120],[111,116]];
+    for(let i=0;i<count;i++){const p=positions[i];drawShell(x+p[0],y+p[1],.36+(i%3)*.035,i%2?"#f1c69b":"#fff1d1");}
+    if(state.patchStock>24){ctx.fillStyle="#805e3c";ctx.font="900 12px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText(`+${state.patchStock-24}`,x+w-24,y+h-17);}
+    if(state.collector){ctx.strokeStyle="rgba(49,135,122,.2)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+w/2,y+h/2,55+Math.sin(animationTime*3)*4,0,Math.PI*2);ctx.stroke();}
+    ctx.restore();
+  }
+  function drawShell(x,y,s,color) {
+    ctx.save();ctx.translate(x,y);ctx.scale(s,s);ctx.fillStyle="rgba(108,75,43,.12)";ctx.beginPath();ctx.ellipse(1,7,17,5,0,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.moveTo(-14,4);ctx.bezierCurveTo(-16,-7,-8,-14,0,-16);ctx.bezierCurveTo(8,-14,16,-7,14,4);ctx.quadraticCurveTo(0,13,-14,4);ctx.closePath();
+    const g=ctx.createLinearGradient(0,-15,0,10);g.addColorStop(0,"#fff8df");g.addColorStop(1,color);ctx.fillStyle=g;ctx.fill();ctx.strokeStyle="#d69c73";ctx.lineWidth=1.3;ctx.stroke();
+    ctx.strokeStyle="rgba(184,121,89,.7)";ctx.lineWidth=.85;for(let a=-1;a<=1;a++){ctx.beginPath();ctx.moveTo(0,2);ctx.quadraticCurveTo(a*4,-5,a*10,-11);ctx.stroke();}
+    ctx.restore();
+  }
+  function drawStaff() {
+    if(state.collector){
+      const phase=(animationTime*.34)%1;const x=PATCH.x+18+phase*(PATCH.width-36);const y=PATCH.y+75+Math.sin(animationTime*2.3)*18;
+      drawPerson(x,y,"#3c9d8a","#f3d19b",true);
+      ctx.fillStyle="#fff";ctx.font="900 9px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("수거",x,y+28);
+    }
+    if(state.cashier){drawPerson(856,402,"#648f74","#eac291",false);ctx.fillStyle="#fff8e3";roundedRect(ctx,866,389,36,17,7);ctx.fill();ctx.fillStyle="#598777";ctx.font="900 8px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("계산",884,401);}
+  }
+  function drawPerson(x,y,shirt,skin,withCap) {
+    ctx.save();ctx.translate(x,y);const bob=Math.sin(animationTime*8+x*.04)*1.5;
+    ctx.fillStyle="rgba(76,67,47,.17)";ctx.beginPath();ctx.ellipse(0,16,14,5,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#52606a";ctx.beginPath();ctx.ellipse(-5,13+bob,3,6,-.1,0,Math.PI*2);ctx.ellipse(5,13-bob,3,6,.1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=shirt;ctx.beginPath();ctx.roundRect(-11,-5,22,22,7);ctx.fill();
+    ctx.fillStyle=skin;ctx.beginPath();ctx.arc(0,-14+bob,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#584a45";ctx.beginPath();ctx.arc(0,-17+bob,10,Math.PI,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#334c4d";ctx.beginPath();ctx.arc(-3,-14+bob,1,0,Math.PI*2);ctx.arc(3,-14+bob,1,0,Math.PI*2);ctx.fill();
+    if(withCap){ctx.fillStyle="#fff1cf";ctx.beginPath();ctx.ellipse(0,-22+bob,12,4,0,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-7,-25+bob,14,4);}
+    ctx.restore();
+  }
+  function drawCustomer() {
+    if(!customer){
+      drawPerson(SHOP.x,SHOP.y,"#d58b75","#f1c6a6",false);
+      ctx.fillStyle="rgba(255,255,248,.9)";roundedRect(ctx,SHOP.x-63,SHOP.y-72,126,27,11);ctx.fill();ctx.fillStyle="#6e8984";ctx.font="800 9px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText(`다음 손님 ${Math.max(0,customerDelay).toFixed(0)}초`,SHOP.x,SHOP.y-55);
+      return;
+    }
+    drawPerson(SHOP.x,SHOP.y,"#d58b75","#f1c6a6",false);
+    ctx.fillStyle="rgba(255,255,250,.96)";roundedRect(ctx,SHOP.x-83,SHOP.y-89,166,48,13);ctx.fill();ctx.strokeStyle="rgba(200,174,143,.6)";ctx.lineWidth=1;ctx.stroke();
+    ctx.fillStyle="#6e8984";ctx.font="800 9px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("원하는 조개",SHOP.x,SHOP.y-71);
+    ctx.fillStyle="#365960";ctx.font="950 15px system-ui,sans-serif";ctx.fillText(`${customer.order}개 · ${customer.reward}원`,SHOP.x,SHOP.y-52);
+    ctx.beginPath();ctx.moveTo(SHOP.x-8,SHOP.y-41);ctx.lineTo(SHOP.x,SHOP.y-33);ctx.lineTo(SHOP.x+8,SHOP.y-41);ctx.fillStyle="#fffefa";ctx.fill();
+  }
+  function drawPlayer() {
+    const x=state.player.x,y=state.player.y;
+    ctx.save();ctx.translate(x,y);const bob=keys.size>0&&running&&!paused?Math.sin(walkAmount)*2.4:Math.sin(animationTime*1.8)*.7;
+    ctx.fillStyle="rgba(68,76,53,.2)";ctx.beginPath();ctx.ellipse(0,16,18,7,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#426a62";ctx.beginPath();ctx.ellipse(-6,14+bob,4,7,-.08,0,Math.PI*2);ctx.ellipse(6,14-bob,4,7,.08,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#3f9f91";ctx.beginPath();ctx.roundRect(-14,-4+bob,28,23,9);ctx.fill();
+    ctx.fillStyle="#f4d1aa";ctx.beginPath();ctx.arc(0,-15+bob,11,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#63483f";ctx.beginPath();ctx.arc(0,-18+bob,11,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-10,-18+bob,20,5);
+    ctx.fillStyle="#fff0cf";ctx.beginPath();ctx.ellipse(0,-21+bob,13,5,0,Math.PI,Math.PI*2);ctx.fill();ctx.fillRect(-7,-25+bob,14,4);
+    ctx.fillStyle="#173f4a";ctx.beginPath();ctx.arc(-4,-14+bob,1.2,0,Math.PI*2);ctx.arc(4,-14+bob,1.2,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle="#fff9dc";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-12+bob,4,.15,Math.PI-.15);ctx.stroke();
+    ctx.restore();
+  }
+  function drawFloaters() {
+    for(const f of floaters){ctx.save();ctx.globalAlpha=clamp(f.life/f.max,0,1);ctx.fillStyle="rgba(34,76,76,.22)";roundedRect(ctx,f.x-39,f.y-3,78,22,9);ctx.fill();ctx.fillStyle=f.color;ctx.font="900 11px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText(f.text,f.x,f.y+12);ctx.restore();}
+  }
+  function drawRoundBanner() {
+    const alpha=Math.min(1,roundBannerTimer*2);
+    ctx.save();ctx.globalAlpha=alpha;ctx.fillStyle="rgba(20,80,85,.82)";roundedRect(ctx,345,126,310,91,21);ctx.fill();ctx.strokeStyle="rgba(255,255,239,.72)";ctx.lineWidth=2;roundedRect(ctx,345,126,310,91,21);ctx.stroke();ctx.fillStyle="#fff8df";ctx.font="950 30px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("2 라운드",500,166);ctx.font="750 12px system-ui,sans-serif";ctx.fillText("주문이 커졌어요 · 새 업그레이드 비용 1,000원",500,191);ctx.restore();
+  }
+  function drawPauseVeil() {ctx.fillStyle="rgba(17,55,65,.22)";ctx.fillRect(0,0,1000,600);ctx.fillStyle="#fffdf2";ctx.font="950 27px system-ui,sans-serif";ctx.textAlign="center";ctx.fillText("잠시 쉬어가요",500,310);}
+
+  function frame(now) {
+    const delta = Math.min(.05, Math.max(0, (now - (lastFrame || now)) / 1000));
+    lastFrame = now;
+    update(delta);
+    draw();
+    requestAnimationFrame(frame);
+  }
+
+  el.sell.addEventListener("click", () => sellToCustomer(false));
+  el.upgrade.addEventListener("click", buyUpgrade);
+  el.collector.addEventListener("click", () => hire("collector"));
+  el.cashier.addEventListener("click", () => hire("cashier"));
+  el.pause.addEventListener("click", togglePause);
+  $("startButton").addEventListener("click", () => {
+    if(running && paused) { togglePause(); return; }
+    startGame();
+  });
+  window.addEventListener("keydown", (event) => {
+    const key=event.key.toLowerCase();
+    if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," "].includes(key)) event.preventDefault();
+    if(key==="escape"||key==="p") { if(!el.modal.hidden && !running) return; togglePause(); return; }
+    if((key==="e"||key==="enter") && running && !paused) { if(customer && state.shells>=customer.order && nearShop()) sellToCustomer(false); return; }
+    keys.add(key);
+  }, {passive:false});
+  window.addEventListener("keyup",(event)=>keys.delete(event.key.toLowerCase()));
+  window.addEventListener("blur",()=>keys.clear());
+  window.addEventListener("resize",draw);
+  document.addEventListener("visibilitychange",()=>{if(document.hidden){keys.clear();save();}});
+  window.addEventListener("beforeunload",save);
+
+  renderUI();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
